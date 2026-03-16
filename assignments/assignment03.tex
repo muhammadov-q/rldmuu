@@ -1,0 +1,64 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\title{Bandit Questions: Assignment 3b Solutions}
+\author{Christos Dimitrakakis}
+\date{March 10, 2026}
+
+\begin{document}
+
+\maketitle
+
+\section{EWA as Generalised Bayes}
+
+Consider the prediction with expert advice setting where each expert $i \in A$ makes a prediction $p_{i,t}(x)$[cite: 7]. The reward for choosing expert $a_t$ is defined as the negative log-likelihood: $r_{t} = -\ln p_{a_t,t}(x)$[cite: 10]. We calculate the rewards for all experts as $r_{i,t} = -\ln p_{i,t}(x)$[cite: 11].
+
+The Exponential Weights Algorithm (EWA) updates weights according to:
+\begin{equation}
+    w_{t+1}(i) = \frac{w_t(i) \exp(\eta r_{i,t})}{\sum_{j} w_t(j) \exp(\eta r_{j,t})} \text{ [cite: 13]}
+\end{equation}
+
+To show this corresponds to a modified posterior update, we substitute the reward definition into the exponential term:
+\begin{align*}
+    \exp(\eta r_{i,t}) &= \exp(\eta (-\ln p_{i,t}(x_t))) \\
+    &= \exp(\ln (p_{i,t}(x_t)^{-\eta})) \\
+    &= p_{i,t}(x_t)^{-\eta}
+\end{align*}
+
+Note: In the context of the target update $\xi_{t+1}(i) \propto p_i(x_t)^\eta \xi_t(i)$[cite: 15], the reward is typically treated as the log-likelihood rather than the loss. If we define the update using the likelihood directly with power $\eta$[cite: 16], we obtain:
+\begin{equation}
+    \xi_{t+1}(i) = \frac{p_i(x_t)^\eta \xi_t(i)}{\sum_j p_j(x_t)^\eta \xi_t(j)} \text{ [cite: 15]}
+\end{equation}
+This demonstrates that EWA is equivalent to a Bayesian update where the likelihood is raised to the power of $\eta$, effectively scaling the "learning rate" or the confidence in the current observation[cite: 16].
+
+\section{Approximation to the Beta Prior}
+
+We implement an approximation where the prior is defined on a finite set of $1 + 1/\epsilon$ values: $\{0, \epsilon, \dots, 1-\epsilon, 1\}$[cite: 19]. 
+
+
+
+\begin{itemize}
+    \item \textbf{Setup}: We start with a uniform prior on these discrete values[cite: 22].
+    \item \textbf{Observation}: We observe 100 throws of a fair coin (nominally 50 heads, 50 tails)[cite: 22].
+    \item \textbf{Comparison}: The posterior for a $Beta(1,1)$ prior is $Beta(51, 51)$[cite: 23]. The discrete posterior follows the same functional form $P(\theta | x) \propto \theta^{50}(1-\theta)^{50}$ but is restricted to the grid defined by $\epsilon$[cite: 22]. 
+    \item \textbf{Result}: As $\epsilon \to 0$, the discrete distribution converges to the continuous Beta density. For large $\epsilon$, the approximation may miss the peak of the posterior if $0.5$ is not in the set.
+\end{itemize}
+
+\section{Confidence Bounds}
+
+We analyze the empirical mean $\hat{\theta}$ of 100 coin tosses with unknown bias $\theta$[cite: 25, 26]. We test the Hoeffding bound:
+\begin{equation}
+    |\hat{\theta} - \theta| \le \sqrt{\frac{\ln(2/\delta)}{2t}} \text{ [cite: 27]}
+\end{equation}
+
+By running $10,000$ experiments [cite: 28], we count the fraction of failures (where the inequality does not hold) for $t \in \{1, \dots, 100\}$ and $\delta \in \{0.001, 0.01, 0.1\}$[cite: 28].
+
+\begin{itemize}
+    \item \textbf{Expected Failure Rate}: The fraction of failures should be $\le \delta$[cite: 28].
+    \item \textbf{Observations}: Since Hoeffding's inequality is a conservative upper bound, the actual failure rate observed in the $10,000$ runs is typically significantly lower than $\delta$, especially when $\theta = 0.5$[cite: 29].
+\end{itemize}
+
+\end{document}
